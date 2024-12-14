@@ -43,8 +43,8 @@ exports.getstatus1 = async (req, res) => {
 
   
   -- Statuslar bo'yicha narxlar (dollar va so'm)
-  SUM(CASE WHEN a.status = 1 AND a.currency_id = 1 THEN a.price ELSE 0 END) AS status_1_narx_dollar,
-  SUM(CASE WHEN a.status = 1 AND a.currency_id = 2 THEN a.price ELSE 0 END) AS status_1_narx_sum,
+  SUM(CASE WHEN a.status = 1 AND a.currency_id = 1 THEN (a.price*a.number) ELSE 0 END) AS status_1_narx_dollar,
+  SUM(CASE WHEN a.status = 1 AND a.currency_id = 2 THEN (a.price*a.number) ELSE 0 END) AS status_1_narx_sum,
   
   MIN(n.created) AS yaratilgan_sana
 FROM 
@@ -85,7 +85,7 @@ exports.getstatus2 = async (req, res) => {
     -- Statuslar bo'yicha narxlar (dollar va so'm)
 
     
-    SUM(CASE WHEN a.status = 2 AND a.currency_id = 1 THEN a.price ELSE 0 END) AS status_2_narx_dollar,
+    SUM(CASE WHEN a.status = 2 AND a.currency_id = 1 THEN (a.price*a.number) ELSE 0 END) AS status_2_narx_dollar,
     SUM(CASE WHEN a.status = 2 AND a.currency_id = 2 THEN a.price ELSE 0 END) AS status_2_narx_sum,
     
   
@@ -132,8 +132,8 @@ exports.getstatus3 = async (req, res) => {
     -- Statuslar bo'yicha narxlar (dollar va so'm)
     
     
-    SUM(CASE WHEN a.status = 3 AND a.currency_id = 1 THEN a.price ELSE 0 END) AS status_3_narx_dollar,
-    SUM(CASE WHEN a.status = 3 AND a.currency_id = 2 THEN a.price ELSE 0 END) AS status_3_narx_sum,
+    SUM(CASE WHEN a.status = 3 AND a.currency_id = 1 THEN (a.price*a.number) ELSE 0 END) AS status_3_narx_dollar,
+    SUM(CASE WHEN a.status = 3 AND a.currency_id = 2 THEN (a.price*a.number) ELSE 0 END) AS status_3_narx_sum,
   
     MIN(n.created) AS yaratilgan_sana
   FROM 

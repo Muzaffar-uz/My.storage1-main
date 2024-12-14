@@ -8,5 +8,6 @@ router.post('/insert/:id',input_controller.postInput)
 router.delete('/delete/:id',input_controller.delInput);
 router.get('/product',input_controller.getProduct)
 router.get('/excel/:id',input_controller.exportInputToExcel)
+router.get('/price',input_controller.getPrice)
 
 module.exports = router

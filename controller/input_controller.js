@@ -55,6 +55,24 @@ exports.getProduct = async (req, res) => {
 };
 
 
+exports.getPrice = async (req, res) => {
+  const { price } = req.query;
+
+  const knex = await Product.knex();
+
+  // Agar name parametri berilmagan bo'lsa, status 0 bo'lmagan barcha mahsulo
+  if (!price) {
+    try{const data = await knex.raw(`
+     SELECT id, price_1,price_2,price_3 FROM product WHERE status != 0
+    `);
+    return res.json({ success: true, input: data[0] });
+    }catch(e){
+      return res.json({success:false, msg:e.message})
+    }
+    }
+  }
+
+
 
 exports.postInput = async (req, res) => {
   try {
