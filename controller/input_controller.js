@@ -91,6 +91,7 @@ const product_ = await Product.query().where('id',req.body.product_id).first();
 if (!product_) {
   return res.status(404).json({ success: false, message: 'Mahsulot topilmadi' });
 }
+
 const product_currency = parseFloat(product_.currency_id);
 
 
@@ -116,11 +117,19 @@ const product_currency = parseFloat(product_.currency_id);
   .first();
 
     const lastTotal = lastAdded ? parseFloat(lastAdded.total) : 0;
-    const newTotal = status === 2 ? lastTotal - number : lastTotal + number;
+    const newTotal = status == 2 ? lastTotal - number : lastTotal + number;
+
+ // Provider ma'lumotlarini olish
+    const customer = await input_provider.query().where('id', provider_id).first();
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Provider not found' });
+    }
+    const counterparty_id = customer.counterparty_id || 0;
+    
 
     // Oxirgi balansni olish
     const lastBalanceRecord = await Input.query()
-    .where('provider_id', provider_id)
+    .where('counterparty_id', counterparty_id )
     .where('currency_id', currency_id) // currency_id bo'yicha filtrlash
     .where('status', '!=', 4)  // Status 4 bo'lmaganlarni olish
     .orderBy('id', 'desc')
@@ -128,15 +137,11 @@ const product_currency = parseFloat(product_.currency_id);
     const lastBalance = lastBalanceRecord && lastBalanceRecord.balance != null ? parseFloat(lastBalanceRecord.balance) : 0;
 
     // Yangi balansni hisoblash
-    const newBalance = status === 2 ? lastBalance + (price*number) : lastBalance - (price*number);
+    const newBalance = status == 2 ? lastBalance + (price*number) : lastBalance - (price*number);
 
-    // Provider ma'lumotlarini olish
-    const customer = await input_provider.query().where('id', provider_id).first();
-    if (!customer) {
-      return res.status(404).json({ success: false, message: 'Provider not found' });
-    }
-    const counterparty_id = customer.counterparty_id || 0;
-
+   
+    
+    
     // Ma'lumotlarni qo'shish
     await Input.query().insert({
       provider_id,
