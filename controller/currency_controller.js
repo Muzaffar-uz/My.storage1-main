@@ -16,7 +16,7 @@ exports.postCurrency = async (req,res)=>{
 exports.putCurrency = async (req,res)=>{
    // const d = new Date()
    await Currency.query().where('id',req.params.id).update({
-    name: req.body.name,
+    name: req.body.name, 
     exchange_rate: req.body.exchange_rate,
       // time: d,
    })

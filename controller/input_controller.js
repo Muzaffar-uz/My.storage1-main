@@ -38,39 +38,51 @@ exports.getProduct = async (req, res) => {
 
   const knex = await Product.knex();
 
-  // Agar name parametri berilmagan bo'lsa, status 0 bo'lmagan barcha mahsulotlarni qaytar
-  if (!name) {
+  try {
+    // name bo'lmasa, barcha mahsulotlar va narxlarini qaytar
+    if (!name) {
+      const data = await knex.raw(`
+        SELECT id, name, price_1, price_2, price_3
+        FROM product
+        WHERE status != 0
+      `);
+      return res.json({ success: true, input: data[0] });
+    }
+
+    // name bo'yicha mahsulotlarni qidirish
     const data = await knex.raw(`
-      SELECT id, name FROM product WHERE status != 0
-    `);
+      SELECT id, name, price_1, price_2, price_3
+      FROM product
+      WHERE name LIKE ? AND status != 0
+    `, [`${name}%`]);
+
     return res.json({ success: true, input: data[0] });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return res.status(500).json({ success: false, msg: "Server error" });
   }
-
-  // name parametriga ko'ra qidirish, status 0 bo'lmagan mahsulotlar
-  const data = await knex.raw(`
-    SELECT id, name FROM product WHERE name LIKE ? AND status != 0
-  `, [`${name}%`]);
-
-  return res.json({ success: true, input: data[0] });
 };
 
 
-exports.getPrice = async (req, res) => {
-  const { price } = req.query;
-
-  const knex = await Product.knex();
-
+// exports.getPrice = async (req, res) => {
+  // const { price } = req.query;
+// 
+  // const knex = await Product.knex();
+// 
   // Agar name parametri berilmagan bo'lsa, status 0 bo'lmagan barcha mahsulo
-  if (!price) {
-    try{const data = await knex.raw(`
-     SELECT id, price_1,price_2,price_3 FROM product WHERE status != 0
-    `);
-    return res.json({ success: true, input: data[0] });
-    }catch(e){
-      return res.json({success:false, msg:e.message})
-    }
-    }
-  }
+  // if (!price) {
+    // try{const data = await knex.raw(`
+    //  SELECT id, price_1,price_2,price_3 FROM product WHERE status != 0
+    // `);
+    // 
+    // price = parseFloat(req.body.price);
+// 
+    // return res.json({ success: true, input: data[0] });
+    // }catch(e){
+      // return res.json({success:false, msg:e.message})
+    // }
+    // }
+  // }
 
 
 
@@ -224,21 +236,34 @@ if(input.status == 4){
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Counterparty balansini yangilash
+    // Counterparty balansini yangilas
     const counterparty = await Counterparty.query().where('id', counterparty_id).first();
-    if (counterparty) {
-      const currentBalance = parseFloat(counterparty.balance) || 0;
-      const currentsum = parseFloat(counterparty.balance_sum) || 0;
-    if(currency_id == 1){
-      const updatedBalance = status === 2 ? currentBalance - (price*number) : currentBalance + (price*number);
+if (counterparty) {
+  // Hozirgi balanslarni olish
+  let currentBalance = parseFloat(counterparty.balance) || 0;
+  let currentsum = parseFloat(counterparty.balance_sum) || 0;
 
-      await Counterparty.query().where('id', counterparty_id).update({ balance: updatedBalance });
-      } else if(currency_id == 2){
-        const updatedBalance_sum = status === 2 ? currentsum - (price*number) : currentsum + (price*number);
+  // currency_id 1 bo'lsa, currentBalance o'zgaradi
+  if (currency_id == 1) {
+    currentBalance = (status == 2) 
+      ? currentBalance - (Number(price) * Number(number)) // Ayrish (status 2 bo'lsa)
+      : currentBalance + (Number(price) * Number(number)); // Qo'shish (status 1 yoki 3 bo'lsa)
+  }
 
-        await Counterparty.query().where('id', counterparty_id).update({ balance_sum: updatedBalance_sum });
-      }
-    }
+  // currency_id 2 bo'lsa, currentsum o'zgaradi
+  if (currency_id == 2) {
+    currentsum = (status == 2) 
+      ? currentsum - (Number(price) * Number(number)) // Ayrish (status 2 bo'lsa)
+      : currentsum + (Number(price) * Number(number)); // Qo'shish (status 1 yoki 3 bo'lsa)
+  }
+
+  // Bir marta update bilan yangilash
+  await Counterparty.query().where('id', counterparty_id).update({
+    balance: currentBalance,
+    balance_sum: currentsum,
+  });
+}
+  
     // 2. IDdan keyingi yozuvlarni olish (shu product_id va provider_id bo'yicha)
     const tabletotal = await Input.query()
       .where('id', '>=', startId)
@@ -247,7 +272,7 @@ if(input.status == 4){
 
     const tablebalance = await Input.query()
       .where('id', '>=', startId)
-      .where('provider_id', provider_id)
+      .where('counterparty_id', counterparty_id)
       .orderBy('id', 'asc');
 
     if (!tabletotal.length && !tablebalance.length) {

@@ -36,7 +36,11 @@ exports.putGroup = async (req,res)=>{
     return res.status(200).json({success:true,msg:'Group_product update'})
 }
 
-exports.delGroup = async (req,res)=>{
-    await Group.query().where('id',req.params.id).delete()
-    return res.status(200).json({success:true,msg:'delete Group_product'})
-}
+exports.delGroup = async (req, res) => {
+    try {
+        await Group.query().where('id', req.params.id).delete();
+        return res.status(200).json({ success: true, msg: 'delete Group_product' });
+    } catch (e) {
+        return res.status(404).json({ success: false, msg: e.message });
+    }
+};
