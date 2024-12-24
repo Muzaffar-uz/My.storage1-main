@@ -171,7 +171,7 @@ exports.postInput_pro = async (req, res) => {
 
 
 
-const input_controller = require('../controller/input_controller'); // input_controller'ni chaqirish
+
 
 exports.delInput_pro = async (req, res) => {
   try {
